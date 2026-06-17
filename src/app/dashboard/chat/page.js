@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 function timeStr(at) {
   const d = new Date(at);
@@ -8,12 +9,29 @@ function timeStr(at) {
 }
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatInner />
+    </Suspense>
+  );
+}
+
+function ChatInner() {
+  const params = useSearchParams();
   const [q, setQ] = useState("");
   const [users, setUsers] = useState([]);
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const msgEnd = useRef(null);
+
+  // Boshqa sahifadan ?user=&name=&username= bilan kelganda suhbatni ochish
+  useEffect(() => {
+    const uid = params.get("user");
+    if (uid) {
+      setActive({ id: uid, name: params.get("name") || "Foydalanuvchi", username: params.get("username") || "" });
+    }
+  }, [params]);
 
   const loadUsers = useCallback(async () => {
     const res = await fetch(`/api/users?q=${encodeURIComponent(q)}`);

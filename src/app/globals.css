@@ -160,6 +160,259 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 2p
 .badge { display:inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
   background: var(--card2); color: var(--accent); border: 1px solid var(--line); }
 
+/* ===== Xarajat (expenses) ===== */
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.income-btn { background: linear-gradient(135deg, #34d399, #059669); }
+
+/* Balans kartasi */
+.balance-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #1c2547, #181d31);
+  animation: float-up .5s ease both;
+}
+.balance-glow {
+  position: absolute; top: -60px; right: -40px; width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(108,140,255,.35), transparent 70%);
+  filter: blur(10px); pointer-events: none;
+  animation: glow-pulse 5s ease-in-out infinite;
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+.balance-label { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; }
+.balance-num {
+  font-size: 42px; font-weight: 800; margin: 6px 0 4px; line-height: 1.1;
+  font-variant-numeric: tabular-nums; letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff, #b9c4ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.balance-num.neg { background: linear-gradient(135deg, #fff, #ffb4b4); -webkit-background-clip: text; background-clip: text; }
+.balance-cur { font-size: 20px; -webkit-text-fill-color: var(--muted); }
+.balance-mini { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
+.bm { display: flex; align-items: center; gap: 10px; }
+.bm-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+.bm-dot.in { background: var(--green); color: var(--green); }
+.bm-dot.out { background: var(--red); color: var(--red); }
+.bm-val { font-weight: 700; font-size: 16px; }
+.bm-lbl { color: var(--muted); font-size: 12px; }
+
+/* Balans chaqnashi (kirim/chiqim qo'shilganda) */
+@keyframes flash-in { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } 30% { box-shadow: 0 0 0 3px rgba(52,211,153,.6); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+@keyframes flash-out { 0% { box-shadow: 0 0 0 0 rgba(248,113,113,0); } 30% { box-shadow: 0 0 0 3px rgba(248,113,113,.6); } 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0); } }
+.flash-income { animation: flash-in .9s ease; }
+.flash-expense { animation: flash-out .9s ease; }
+
+/* Kunlik/oylik plitkalari */
+.stat-tile { animation: float-up .5s ease both; }
+.stat-tile.out-tile { animation-delay: .08s; }
+.stat-tile-head { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+.stat-tile-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.stat-tile-sum { margin-top: 10px; font-size: 15px; }
+
+/* Kategoriya progress qatorlari */
+.cat-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; animation: float-up .4s ease both; }
+.cat-ic { font-size: 22px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg2); border-radius: 10px; flex-shrink: 0; }
+.cat-body { flex: 1; min-width: 0; }
+.cat-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.cat-bar { height: 8px; border-radius: 999px; background: var(--bg2); overflow: hidden; }
+.cat-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  animation: bar-grow .7s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes bar-grow { from { width: 0 !important; } }
+
+/* Tranzaksiya qatori */
+.txn { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line);
+  animation: float-up .35s ease both; }
+.txn:last-of-type { border-bottom: none; }
+.txn-ic { font-size: 20px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; flex-shrink: 0; background: var(--bg2); }
+.txn-ic.income { box-shadow: inset 0 0 0 1px rgba(52,211,153,.4); }
+.txn-ic.expense { box-shadow: inset 0 0 0 1px rgba(248,113,113,.4); }
+.txn-body { flex: 1; min-width: 0; }
+.txn-top { display: flex; justify-content: space-between; font-weight: 600; }
+.txn-top b { font-variant-numeric: tabular-nums; }
+.txn-sub { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Modal / pastdan chiqadigan oyna */
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center; padding: 16px; animation: fade-in .2s ease; }
+@keyframes fade-in { from { opacity: 0; } }
+.modal { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px; max-height: 90vh; overflow-y: auto; }
+.modal.income { border-top: 3px solid var(--green); }
+.modal.expense { border-top: 3px solid var(--red); }
+.sheet-up { animation: sheet-up .3s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes sheet-up { from { transform: translateY(30px) scale(.97); opacity: 0; } }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+/* Kategoriya tanlash chiplari */
+.cat-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg2); color: var(--muted); font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 5px; transition: transform .08s, border-color .15s; }
+.cat-chip:hover { border-color: var(--accent); }
+.cat-chip:active { transform: scale(.94); }
+.cat-chip.on { background: var(--card2); color: var(--text); border-color: var(--accent); }
+
+/* Coming soon */
+.coming-soon { animation: float-up .5s ease both; }
+.cs-emoji { font-size: 64px; margin-bottom: 16px; display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+
+/* ===== Kitoblar lentasi (feed) ===== */
+.fab {
+  position: fixed; right: 28px; bottom: 28px; z-index: 70;
+  width: 60px; height: 60px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font-size: 32px; font-weight: 300; line-height: 1;
+  box-shadow: 0 10px 30px rgba(108,140,255,.5);
+  transition: transform .12s ease, box-shadow .2s;
+  animation: fab-in .4s cubic-bezier(.2,.9,.2,1) both;
+}
+.fab:hover { transform: scale(1.08) rotate(90deg); }
+.fab:active { transform: scale(.94); }
+@keyframes fab-in { from { transform: scale(0) rotate(-90deg); opacity: 0; } }
+
+.post-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; margin-bottom: 14px; animation: float-up .4s ease both;
+}
+.post-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.avatar.sm { width: 30px; height: 30px; font-size: 13px; }
+.post-author { font-weight: 700; }
+.post-text { white-space: pre-wrap; line-height: 1.55; font-size: 15px; margin-bottom: 14px; }
+
+.post-actions { display: flex; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.act {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px;
+  background: var(--bg2); border: 1px solid var(--line); color: var(--muted);
+  font-size: 14px; font-weight: 600; transition: transform .08s, color .15s, border-color .15s;
+}
+.act:hover { color: var(--text); border-color: var(--accent); }
+.act:active { transform: scale(.93); }
+.act.liked { color: var(--red); border-color: rgba(248,113,113,.5); }
+.heart-pop { display: inline-block; animation: heart-pop .4s ease; }
+@keyframes heart-pop { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
+
+/* Izohlar */
+.comments { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 12px; animation: float-up .25s ease both; }
+.comment { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; }
+.comment-input { display: flex; gap: 8px; margin-top: 8px; }
+
+/* Yaratish: tanlash kartalari */
+.choose-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.choose-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  padding: 18px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg2);
+  color: var(--text); transition: transform .1s, border-color .15s;
+}
+.choose-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.choose-card:active { transform: scale(.96); }
+.choose-ic { font-size: 30px; }
+
+/* Ommaviy / shaxsiy tanlash */
+.vis-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vis-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2);
+  color: var(--text); font-weight: 600; transition: border-color .15s, background .15s;
+}
+.vis-opt span { font-size: 12px; font-weight: 400; }
+.vis-opt.on { border-color: var(--accent); background: var(--card2); }
+
+@media (max-width: 820px) {
+  .choose-grid { grid-template-columns: 1fr; }
+  .fab { right: 18px; bottom: 18px; }
+}
+
+/* ===== Dars qilish (lessons) ===== */
+.lesson-tile { display: block; animation: float-up .4s ease both; transition: transform .12s, border-color .15s; }
+.lesson-tile:hover { transform: translateY(-4px); border-color: var(--accent); }
+.lesson-ic { font-size: 40px; margin-bottom: 8px; }
+
+/* So'z kiritish qatorlari */
+.word-row { display: grid; grid-template-columns: 28px 1fr 1fr 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.word-num { color: var(--muted); font-size: 13px; text-align: center; }
+
+.set-card { display: flex; flex-direction: column; }
+
+/* Flashcard ag'darish (3D) */
+.flashcard { perspective: 1200px; max-width: 460px; margin: 0 auto; height: 230px; cursor: pointer; }
+.flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform .5s; transform-style: preserve-3d; }
+.flashcard-inner.flipped { transform: rotateY(180deg); }
+.flashcard-face {
+  position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;
+  font-size: 30px; font-weight: 700; border: 1px solid var(--line);
+}
+.flashcard-face.front { background: var(--card); }
+.flashcard-face.back { background: linear-gradient(135deg, #1c2547, #232a52); color: var(--accent); transform: rotateY(180deg); }
+
+/* Quiz */
+.quiz-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.quiz-progress { flex: 1; height: 8px; border-radius: 999px; background: var(--bg2); overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .3s; }
+.quiz-word { font-size: 34px; font-weight: 800; margin-top: 6px; }
+.quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quiz-opt {
+  padding: 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); font-size: 16px; font-weight: 600; transition: transform .08s, border-color .15s, background .15s;
+}
+.quiz-opt:hover:not(:disabled) { border-color: var(--accent); }
+.quiz-opt:active:not(:disabled) { transform: scale(.97); }
+.quiz-opt.right { background: rgba(52,211,153,.18); border-color: var(--green); color: var(--green); animation: pop .35s ease; }
+.quiz-opt.wrong { background: rgba(248,113,113,.18); border-color: var(--red); color: var(--red); animation: shake .35s ease; }
+.quiz-result-emoji { font-size: 60px; animation: pop .5s ease; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* Flashcard gate (shaxmat) */
+.gate-word { font-size: 32px; font-weight: 800; text-align: center; margin: 6px 0 16px; }
+.gate-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gate-opt {
+  padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2);
+  color: var(--text); font-weight: 600; transition: transform .08s, border-color .15s;
+}
+.gate-opt:hover:not(:disabled) { border-color: var(--accent); }
+.gate-opt.right { background: rgba(52,211,153,.18); border-color: var(--green); color: var(--green); }
+.gate-opt.wrong { background: rgba(248,113,113,.18); border-color: var(--red); color: var(--red); animation: shake .35s ease; }
+.gate-msg { text-align: center; margin-top: 14px; font-weight: 600; }
+.gate-msg.ok { color: var(--green); }
+.gate-msg.bad { color: var(--red); }
+
+/* ===== Shaxmat taxtasi ===== */
+.chess-layout { max-width: 480px; margin: 0 auto; }
+.chess-board {
+  display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+  width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden;
+  border: 2px solid var(--line); box-shadow: 0 12px 40px rgba(0,0,0,.4);
+}
+.sq { position: relative; display: flex; align-items: center; justify-content: center; user-select: none; }
+.sq.light { background: #ebecd0; }
+.sq.dark { background: #6f88c9; }
+.sq.clickable { cursor: pointer; }
+.sq.sel::after { content: ""; position: absolute; inset: 0; background: rgba(255,235,59,.45); }
+.sq.check::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(248,113,113,.7), transparent 70%); }
+.piece { font-size: clamp(24px, 7vw, 44px); line-height: 1; position: relative; z-index: 2; }
+.piece.wp-c { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.piece.bp-c { color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,.25); }
+.hint { position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(0,0,0,.28); z-index: 1; }
+.hint.cap { width: 86%; height: 86%; background: transparent; border: 4px solid rgba(0,0,0,.3); border-radius: 50%; }
+
+.clock-row { display: flex; justify-content: center; margin: 10px 0; }
+.clock {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.clock.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,140,255,.25); }
+.clock b { font-size: 18px; }
+
 /* ===== Mobil (<= 820px) ===== */
 @media (max-width: 820px) {
   /* Topbar */

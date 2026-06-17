@@ -12,6 +12,7 @@ const links = [
   { href: "/dashboard/ai-chat", label: "AI Chat", icon: "🤖" },
   { href: "/dashboard/books", label: "Kitoblar", icon: "📚" },
   { href: "/dashboard/expenses", label: "Xarajat", icon: "💰" },
+  { href: "/dashboard/lessons", label: "Dars qilish", icon: "🎓" },
 ];
 
 export default function Sidebar({ name, username }) {
