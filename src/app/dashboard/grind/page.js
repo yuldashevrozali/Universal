@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
-const OPTIONS = [25, 50];
+const OPTIONS = [10, 25, 50];
 
 function fmt(totalMin) {
   const h = Math.floor(totalMin / 60);
@@ -11,9 +11,10 @@ function fmt(totalMin) {
   return `${m} daq`;
 }
 function mmss(sec) {
-  const m = String(Math.floor(sec / 60)).padStart(2, "0");
-  const s = String(sec % 60).padStart(2, "0");
-  return `${m}:${s}`;
+  const s = Math.max(0, sec);
+  const m = String(Math.floor(s / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${m}:${ss}`;
 }
 
 // Web Audio orqali "ding" ovozi (fayl kerak emas)
@@ -21,6 +22,7 @@ function playChime() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
+    if (ctx.state === "suspended") ctx.resume();
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
       const o = ctx.createOscillator();
@@ -45,7 +47,11 @@ export default function GrindPage() {
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
   const [stats, setStats] = useState(null);
-  const intervalRef = useRef(null);
+
+  // Tugash vaqti (timestamp, ms) — vaqt shu yerdan hisoblanadi,
+  // shuning uchun tab orqada bo'lsa ham (setInterval sekinlashsa ham) aniq qoladi.
+  const endRef = useRef(0);
+  const finishedRef = useRef(false);
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/grind");
@@ -54,7 +60,7 @@ export default function GrindPage() {
 
   useEffect(() => { loadStats(); }, [loadStats]);
 
-  // Targetni o'zgartirganda timerni qayta tiklash (faqat ishlamayotgan bo'lsa)
+  // Target o'zgarsa, ishlamayotgan paytda timerni qayta tiklash
   useEffect(() => {
     if (!running && !finished) setRemaining(target * 60);
   }, [target, running, finished]);
@@ -70,51 +76,77 @@ export default function GrindPage() {
     loadStats();
   }, [target, loadStats]);
 
-  // Timer yuritish
+  const finish = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    setRunning(false);
+    setFinished(true);
+    setRemaining(0);
+    playChime();
+    saveSession(target * 60, true);
+  }, [target, saveSession]);
+
+  // Haqiqiy vaqt bo'yicha qolgan vaqtni hisoblash
+  const tick = useCallback(() => {
+    const rem = Math.round((endRef.current - Date.now()) / 1000);
+    if (rem <= 0) finish();
+    else setRemaining(rem);
+  }, [finish]);
+
+  // Timer yuritish + tabga qaytganda darhol qayta hisoblash
   useEffect(() => {
     if (!running) return;
-    intervalRef.current = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
-          clearInterval(intervalRef.current);
-          setRunning(false);
-          setFinished(true);
-          playChime();
-          saveSession(target * 60, true);
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
-  }, [running, target, saveSession]);
+    tick();
+    const iv = setInterval(tick, 1000);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      clearInterval(iv);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [running, tick]);
 
-  function start() { setFinished(false); setRunning(true); }
-  function pause() { setRunning(false); }
+  function start() {
+    finishedRef.current = false;
+    setFinished(false);
+    endRef.current = Date.now() + remaining * 1000;
+    setRunning(true);
+  }
+
+  function pause() {
+    const rem = Math.max(0, Math.round((endRef.current - Date.now()) / 1000));
+    setRemaining(rem);
+    setRunning(false);
+  }
 
   function stop() {
-    // Tugatish: o'tirilgan vaqtni saqlaymiz (to'liq emas)
-    clearInterval(intervalRef.current);
-    const elapsed = target * 60 - remaining;
+    const rem = running
+      ? Math.max(0, Math.round((endRef.current - Date.now()) / 1000))
+      : remaining;
+    const elapsed = target * 60 - rem;
     setRunning(false);
-    if (elapsed > 0 && !finished) saveSession(elapsed, false);
+    if (elapsed > 0 && !finishedRef.current) saveSession(elapsed, false);
     setRemaining(target * 60);
     setFinished(false);
+    finishedRef.current = false;
   }
 
   function reset() {
     setFinished(false);
     setRunning(false);
+    finishedRef.current = false;
     setRemaining(target * 60);
   }
 
   const progress = 1 - remaining / (target * 60);
-  const deg = Math.round(progress * 360);
+  const deg = Math.round(Math.min(1, Math.max(0, progress)) * 360);
 
   return (
     <div>
       <h1 className="page-title">Grind</h1>
-      <p className="page-sub">Diqqatni jamlang. 25 yoki 50 daqiqalik sessiya tanlang.</p>
+      <p className="page-sub">Diqqatni jamlang. 10, 25 yoki 50 daqiqalik sessiya tanlang.</p>
 
       <div className="card" style={{ marginBottom: 20, textAlign: "center" }}>
         <div className="row" style={{ justifyContent: "center", marginBottom: 26 }}>
