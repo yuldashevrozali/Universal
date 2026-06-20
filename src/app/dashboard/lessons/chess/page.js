@@ -14,22 +14,101 @@ function fmtClock(ms) {
 
 const PIECE_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 
-// Oddiy bot: yutuqli yurishlarni afzal ko'radi, aks holda tasodifiy
-function botMove(chess) {
+const DIFFICULTY_LEVELS = [
+  { id: "beginner",     label: "Beginner",     emoji: "🐣", desc: "Tasodifiy yuradi, juda oson",       delay: 300,  errorRate: 0.55 },
+  { id: "novice",       label: "Novice",        emoji: "🌱", desc: "Ba'zan yaxshi yurishlar qiladi",    delay: 450,  errorRate: 0.38 },
+  { id: "elementary",   label: "Elementary",    emoji: "⚡", desc: "Donalarni himoya qilishga harakat", delay: 600,  errorRate: 0.25 },
+  { id: "intermediate", label: "Intermediate",  emoji: "🧠", desc: "2 hamla oldini ko'radi",            delay: 800,  errorRate: 0.15 },
+  { id: "advanced",     label: "Advanced",      emoji: "👑", desc: "3 hamla tahlil, kuchli raqib",      delay: 1000, errorRate: 0.06 },
+];
+
+// Positive = yaxshi qora (bot) uchun
+function evaluate(chess) {
+  if (chess.isCheckmate()) return chess.turn() === "b" ? -10000 : 10000;
+  if (chess.isDraw() || chess.isStalemate() || chess.isThreefoldRepetition()) return 0;
+  let score = 0;
+  for (const row of chess.board()) {
+    for (const piece of row) {
+      if (!piece) continue;
+      score += piece.color === "b" ? PIECE_VAL[piece.type] : -PIECE_VAL[piece.type];
+    }
+  }
+  return score;
+}
+
+function minimax(chess, depth, alpha, beta, isMax) {
+  if (depth === 0 || chess.isGameOver()) return evaluate(chess);
+  const moves = chess.moves({ verbose: true });
+  if (isMax) {
+    let best = -Infinity;
+    for (const m of moves) {
+      chess.move(m);
+      const val = minimax(chess, depth - 1, alpha, beta, false);
+      chess.undo();
+      best = Math.max(best, val);
+      alpha = Math.max(alpha, val);
+      if (beta <= alpha) break;
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (const m of moves) {
+      chess.move(m);
+      const val = minimax(chess, depth - 1, alpha, beta, true);
+      chess.undo();
+      best = Math.min(best, val);
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return best;
+  }
+}
+
+function botMoveForLevel(chess, levelId) {
   const moves = chess.moves({ verbose: true });
   if (!moves.length) return null;
-  let best = [], bestScore = -Infinity;
-  for (const m of moves) {
-    let score = Math.random() * 0.5;
-    if (m.captured) score += PIECE_VAL[m.captured] * 2;
-    const test = new Chess(chess.fen());
-    test.move(m);
-    if (test.isCheckmate()) score += 1000;
-    else if (test.isCheck()) score += 0.6;
-    if (score > bestScore) { bestScore = score; best = [m]; }
-    else if (score === bestScore) best.push(m);
+
+  if (levelId === "beginner") {
+    return moves[Math.floor(Math.random() * moves.length)];
   }
-  return best[Math.floor(Math.random() * best.length)];
+
+  if (levelId === "novice") {
+    let best = [], bestScore = -Infinity;
+    for (const m of moves) {
+      let score = Math.random() * 3;
+      if (m.captured) score += PIECE_VAL[m.captured];
+      if (score > bestScore) { bestScore = score; best = [m]; }
+      else if (score === bestScore) best.push(m);
+    }
+    return best[Math.floor(Math.random() * best.length)];
+  }
+
+  if (levelId === "elementary") {
+    let best = [], bestScore = -Infinity;
+    for (const m of moves) {
+      let score = Math.random() * 0.5;
+      if (m.captured) score += PIECE_VAL[m.captured] * 2;
+      const test = new Chess(chess.fen());
+      test.move(m);
+      if (test.isCheckmate()) score += 1000;
+      else if (test.isCheck()) score += 0.6;
+      if (score > bestScore) { bestScore = score; best = [m]; }
+      else if (score === bestScore) best.push(m);
+    }
+    return best[Math.floor(Math.random() * best.length)];
+  }
+
+  // intermediate: depth 2 | advanced: depth 3
+  const depth = levelId === "advanced" ? 3 : 2;
+  const clone = new Chess(chess.fen());
+  let bestMove = null, bestScore = -Infinity;
+  for (const m of moves) {
+    clone.move(m);
+    const score = minimax(clone, depth - 1, -Infinity, Infinity, false);
+    clone.undo();
+    if (score > bestScore) { bestScore = score; bestMove = m; }
+  }
+  return bestMove || moves[0];
 }
 
 export default function ChessSetupPage() {
@@ -37,7 +116,8 @@ export default function ChessSetupPage() {
   const [sets, setSets] = useState([]);
   const [setId, setSetId] = useState("");
   const [minutes, setMinutes] = useState(5);
-  const [mode, setMode] = useState(null); // null | "bot"
+  const [difficulty, setDifficulty] = useState("elementary");
+  const [mode, setMode] = useState(null);
   const [creating, setCreating] = useState(false);
   const [err, setErr] = useState("");
 
@@ -49,6 +129,7 @@ export default function ChessSetupPage() {
   }, []);
 
   const chosenSet = sets.find((s) => s.id === setId);
+  const chosenLvl = DIFFICULTY_LEVELS.find((d) => d.id === difficulty);
 
   async function playPartner() {
     setErr(""); setCreating(true);
@@ -64,7 +145,7 @@ export default function ChessSetupPage() {
   }
 
   if (mode === "bot") {
-    return <BotGame setId={setId} minutes={minutes} sets={sets} onExit={() => setMode(null)} />;
+    return <BotGame setId={setId} minutes={minutes} difficulty={difficulty} sets={sets} onExit={() => setMode(null)} />;
   }
 
   return (
@@ -101,13 +182,39 @@ export default function ChessSetupPage() {
         </div>
       </div>
 
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ marginTop: 0 }}>3. Bot darajasi</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+          {DIFFICULTY_LEVELS.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => setDifficulty(d.id)}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: `1px solid ${difficulty === d.id ? "var(--accent)" : "var(--line)"}`,
+                background: difficulty === d.id ? "var(--card2)" : "var(--bg2)",
+                color: "var(--text)",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "border-color .15s, background .15s",
+              }}
+            >
+              <div style={{ fontSize: 24, marginBottom: 4 }}>{d.emoji}</div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{d.label}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2, lineHeight: 1.4 }}>{d.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>3. Raqib</h3>
+        <h3 style={{ marginTop: 0 }}>4. Raqib</h3>
         <div className="grid grid-2">
           <button className="choose-card" onClick={() => setMode("bot")}>
             <span className="choose-ic">🤖</span>
             <b>Bot bilan</b>
-            <span className="muted" style={{ fontSize: 12 }}>Hozir o'ynash</span>
+            <span className="muted" style={{ fontSize: 12 }}>{chosenLvl?.emoji} {chosenLvl?.label}</span>
           </button>
           <button className="choose-card" onClick={playPartner} disabled={creating}>
             <span className="choose-ic">👥</span>
@@ -122,7 +229,7 @@ export default function ChessSetupPage() {
 }
 
 /* ============ BOT BILAN O'YIN (mahalliy) ============ */
-function BotGame({ setId, minutes, sets, onExit }) {
+function BotGame({ setId, minutes, difficulty, sets, onExit }) {
   const gameRef = useRef(new Chess());
   const [fen, setFen] = useState(gameRef.current.fen());
   const [cards, setCards] = useState(null);
@@ -130,11 +237,12 @@ function BotGame({ setId, minutes, sets, onExit }) {
   const [botMs, setBotMs] = useState(minutes * 60 * 1000);
   const [gatePassed, setGatePassed] = useState(false);
   const [wrong, setWrong] = useState(false);
-  const [status, setStatus] = useState("active"); // active | win | lose | draw
+  const [status, setStatus] = useState("active");
   const [thinking, setThinking] = useState(false);
 
   const turn = gameRef.current.turn();
   const useGate = setId && cards && cards.length >= 4;
+  const lvl = DIFFICULTY_LEVELS.find((d) => d.id === difficulty) || DIFFICULTY_LEVELS[2];
 
   useEffect(() => {
     if (!setId) return;
@@ -144,7 +252,6 @@ function BotGame({ setId, minutes, sets, onExit }) {
     })();
   }, [setId]);
 
-  // Soat
   useEffect(() => {
     if (status !== "active") return;
     const iv = setInterval(() => {
@@ -166,23 +273,22 @@ function BotGame({ setId, minutes, sets, onExit }) {
     return false;
   }
 
-  // Bot yuradi
   const doBot = useCallback(() => {
     const g = gameRef.current;
     if (g.turn() !== "b" || g.isGameOver()) return;
+    const level = DIFFICULTY_LEVELS.find((d) => d.id === difficulty) || DIFFICULTY_LEVELS[2];
     setThinking(true);
     setTimeout(() => {
-      const m = botMove(g);
+      const m = botMoveForLevel(g, difficulty);
       if (m) {
         g.move(m);
-        // Bot ham "so'z javobini" simulyatsiya qiladi: ~25% xato -> 10s jarima
-        if (useGate && Math.random() < 0.25) setBotMs((t) => Math.max(0, t - 10000));
+        if (useGate && Math.random() < level.errorRate) setBotMs((t) => Math.max(0, t - 10000));
         setFen(g.fen());
       }
       setThinking(false);
       checkEnd();
-    }, 550);
-  }, [useGate]);
+    }, level.delay);
+  }, [useGate, difficulty]);
 
   function onMove({ from, to, promotion }) {
     const g = gameRef.current;
@@ -209,7 +315,7 @@ function BotGame({ setId, minutes, sets, onExit }) {
   return (
     <div>
       <button className="btn ghost auto" onClick={onExit} style={{ marginBottom: 16 }}>← Sozlamalar</button>
-      <h1 className="page-title">🤖 Bot bilan</h1>
+      <h1 className="page-title">🤖 Bot bilan &mdash; {lvl.emoji} {lvl.label}</h1>
 
       <div className="chess-layout">
         <div className="clock-row">
