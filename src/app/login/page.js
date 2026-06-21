@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const HandScanner = lazy(() => import("@/components/HandScanner"));
+const HackerIntro = lazy(() => import("@/components/HackerIntro"));
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,8 +13,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState("credentials"); // "credentials" | "hand-scan"
+  const [step, setStep] = useState("credentials"); // credentials | hand-scan | hand-retry | hacker
   const [pendingToken, setPendingToken] = useState("");
+
+  function goToDashboard() {
+    router.replace("/dashboard");
+    router.refresh();
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -35,8 +41,8 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace("/dashboard");
-      router.refresh();
+      setStep("hacker");
+      setLoading(false);
     } catch (e) {
       setError(e.message);
       setLoading(false);
@@ -54,57 +60,59 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Xatolik");
-      router.replace("/dashboard");
-      router.refresh();
+      setStep("hacker");
+      setLoading(false);
     } catch (e) {
       setError(e.message);
-      setStep("hand-scan-retry");
+      setStep("hand-retry");
       setLoading(false);
     }
   }
 
-  if (step === "hand-scan" || step === "hand-scan-retry") {
+  // ── Hacker animation screen ──
+  if (step === "hacker") {
+    return (
+      <Suspense fallback={null}>
+        <HackerIntro onDone={goToDashboard} />
+      </Suspense>
+    );
+  }
+
+  // ── Hand scan screen ──
+  if (step === "hand-scan" || step === "hand-retry") {
     return (
       <div className="auth-wrap">
         <div className="card auth-card" style={{ maxWidth: 480 }}>
           <div className="center" style={{ marginBottom: 18 }}>
             <div className="brand">Universal</div>
-            <p className="muted" style={{ margin: "6px 0 0" }}>
-              2-bosqich: Qo'l skaneri
-            </p>
+            <p className="muted" style={{ margin: "6px 0 0" }}>2-bosqich: Qo'l skaneri</p>
           </div>
 
           <div
             style={{
-              background: "var(--bg2)",
-              border: "1px solid var(--line)",
-              borderRadius: 12,
-              padding: "12px 16px",
-              fontSize: 14,
-              marginBottom: 16,
-              color: "var(--muted)",
-              display: "flex",
-              gap: 10,
-              alignItems: "flex-start",
+              background: "var(--bg2)", border: "1px solid var(--line)",
+              borderRadius: 12, padding: "12px 16px", fontSize: 14,
+              marginBottom: 16, color: "var(--muted)",
+              display: "flex", gap: 10, alignItems: "flex-start",
             }}
           >
             <span style={{ fontSize: 20 }}>✋</span>
             <span>
-              Kameraga qo'lingizni to'liq oching — 5 barmoqni ham ko'rsating. Skaner avtomatik
-              tanib oladi.
+              Kameraga qo'lingizni to'liq oching — 5 barmoqni ham ko'rsating va{" "}
+              <b style={{ color: "var(--text)" }}>10 soniya ushlang</b>.
+              Skaner avtomatik tanib oladi.
             </span>
           </div>
 
           {error && <div className="error">{error}</div>}
 
-          {step === "hand-scan-retry" ? (
-            <div style={{ textAlign: "center" }}>
+          {step === "hand-retry" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button className="btn" onClick={() => { setError(""); setStep("hand-scan"); }}>
-                Qaytadan urinish
+                ✋ Qaytadan urinish
               </button>
               <button
                 className="btn ghost"
-                style={{ marginTop: 10 }}
                 onClick={() => { setStep("credentials"); setError(""); }}
               >
                 Parol bilan qaytish
@@ -124,6 +132,7 @@ export default function LoginPage() {
     );
   }
 
+  // ── Credentials screen ──
   return (
     <div className="auth-wrap">
       <div className="card auth-card">

@@ -11,6 +11,7 @@ const CONNECTIONS = [
   [5,9],[9,13],[13,17],
 ];
 const TIPS = [4, 8, 12, 16, 20];
+const HOLD_MS = 10000;
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -19,20 +20,19 @@ function loadScript(src) {
     s.src = src;
     s.crossOrigin = "anonymous";
     s.onload = resolve;
-    s.onerror = () => reject(new Error("Skript yuklashda xatolik: " + src));
+    s.onerror = () => reject(new Error("Skript yuklashda xatolik"));
     document.head.appendChild(s);
   });
 }
 
 function isOpenHand(lm) {
-  const fingers = [
+  return [
     Math.abs(lm[4].x - lm[2].x) > 0.04,
     lm[8].y < lm[6].y,
     lm[12].y < lm[10].y,
     lm[16].y < lm[14].y,
     lm[20].y < lm[18].y,
-  ];
-  return fingers.filter(Boolean).length >= 4;
+  ].filter(Boolean).length >= 4;
 }
 
 function drawHand(ctx, lm, w, h, open) {
@@ -55,16 +55,18 @@ function drawHand(ctx, lm, w, h, open) {
 export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const stateRef = useRef({ stopped: false, hands: null, raf: null, confirmTimer: null, stream: null });
+  const stateRef = useRef({ stopped: false, hands: null, raf: null, stream: null });
+  const openStartRef = useRef(null);
+  const scannedRef = useRef(false);
+
   const [status, setStatus] = useState("Kamera ochilmoqda...");
   const [detected, setDetected] = useState(false);
   const [progress, setProgress] = useState(0);
-  const scannedRef = useRef(false);
+  const [countdown, setCountdown] = useState(10);
 
   const cleanup = useCallback(() => {
     const s = stateRef.current;
     s.stopped = true;
-    clearTimeout(s.confirmTimer);
     cancelAnimationFrame(s.raf);
     s.stream?.getTracks().forEach((t) => t.stop());
     s.hands?.close?.();
@@ -104,9 +106,6 @@ export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }
           minTrackingConfidence: 0.5,
         });
 
-        let openFrames = 0;
-        const NEEDED_FRAMES = 20;
-
         hands.onResults((results) => {
           if (s.stopped || scannedRef.current) return;
           const canvas = canvasRef.current;
@@ -128,26 +127,32 @@ export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }
             drawHand(ctx, mirrored, canvas.width, canvas.height, open);
 
             if (open) {
-              openFrames = Math.min(openFrames + 1, NEEDED_FRAMES);
+              if (!openStartRef.current) openStartRef.current = Date.now();
+              const elapsed = Date.now() - openStartRef.current;
+              const pct = Math.min(100, Math.round((elapsed / HOLD_MS) * 100));
+              const secs = Math.max(0, Math.ceil((HOLD_MS - elapsed) / 1000));
               setDetected(true);
-              setProgress(Math.round((openFrames / NEEDED_FRAMES) * 100));
-              setStatus(openFrames >= NEEDED_FRAMES ? "Saqlanmoqda..." : "Qo'lingizni ushlang...");
-              if (openFrames >= NEEDED_FRAMES && !scannedRef.current) {
+              setProgress(pct);
+              setCountdown(secs);
+              setStatus(secs > 0 ? `Ushlang... ${secs} soniya` : "Saqlanmoqda...");
+
+              if (elapsed >= HOLD_MS && !scannedRef.current) {
                 scannedRef.current = true;
-                const flat = lm.flatMap((p) => [p.x, p.y, p.z]);
                 s.stopped = true;
-                onScan(flat);
+                onScan(lm.flatMap((p) => [p.x, p.y, p.z]));
               }
             } else {
-              openFrames = Math.max(0, openFrames - 2);
+              openStartRef.current = null;
               setDetected(false);
               setProgress(0);
+              setCountdown(10);
               setStatus("Barcha 5 barmoqni oching va ushlang...");
             }
           } else {
-            openFrames = 0;
+            openStartRef.current = null;
             setDetected(false);
             setProgress(0);
+            setCountdown(10);
             setStatus("Qo'lingizni kameraga ko'rsating...");
           }
         });
@@ -169,6 +174,8 @@ export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }
     return cleanup;
   }, [onScan, cleanup]);
 
+  const circumference = 2 * Math.PI * 52;
+
   return (
     <div className="scanner-overlay">
       <div className="scanner-box">
@@ -176,6 +183,7 @@ export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }
           <span className="scanner-ic">✋</span>
           <h3 style={{ margin: 0 }}>{title}</h3>
         </div>
+
         <div className="scanner-video-wrap">
           <video ref={videoRef} autoPlay playsInline muted style={{ display: "none" }} />
           <canvas
@@ -184,31 +192,51 @@ export default function HandScanner({ onScan, onCancel, title = "Qo'l skaneri" }
             height={240}
             className={`scanner-canvas ${detected ? "detected" : ""}`}
           />
-          {detected && progress < 100 && (
+
+          {/* Ring countdown overlay */}
+          {detected && (
             <div className="scanner-ring">
-              <svg viewBox="0 0 100 100" width="80" height="80">
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#2a3150" strokeWidth="8" />
+              <svg viewBox="0 0 120 120" width={100} height={100}>
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(52,211,153,0.15)" strokeWidth="7" />
                 <circle
-                  cx="50" cy="50" r="44" fill="none"
-                  stroke="#34d399" strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 44}`}
-                  strokeDashoffset={`${2 * Math.PI * 44 * (1 - progress / 100)}`}
+                  cx="60" cy="60" r="52" fill="none"
+                  stroke="#34d399" strokeWidth="7"
                   strokeLinecap="round"
-                  transform="rotate(-90 50 50)"
-                  style={{ transition: "stroke-dashoffset 0.1s" }}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={circumference * (1 - progress / 100)}
+                  transform="rotate(-90 60 60)"
+                  style={{ transition: "stroke-dashoffset 0.15s linear" }}
                 />
               </svg>
-              <span className="scanner-ring-pct">{progress}%</span>
+              <span className="scanner-ring-pct">{countdown > 0 ? countdown : "✓"}</span>
             </div>
           )}
         </div>
-        <p
-          className="scanner-status"
-          style={{ color: detected ? "var(--green)" : "var(--muted)" }}
-        >
+
+        <p className="scanner-status" style={{ color: detected ? "var(--green)" : "var(--muted)" }}>
           {status}
         </p>
-        <button className="btn ghost" style={{ marginTop: 4 }} onClick={() => { cleanup(); onCancel(); }}>
+
+        {/* Mini progress bar */}
+        {detected && (
+          <div style={{ width: "100%", height: 4, background: "var(--bg2)", borderRadius: 99 }}>
+            <div
+              style={{
+                height: "100%",
+                borderRadius: 99,
+                background: "linear-gradient(90deg, var(--green), #6ee7b7)",
+                width: `${progress}%`,
+                transition: "width 0.15s linear",
+              }}
+            />
+          </div>
+        )}
+
+        <button
+          className="btn ghost"
+          style={{ marginTop: 4 }}
+          onClick={() => { cleanup(); onCancel(); }}
+        >
           Bekor qilish
         </button>
       </div>
