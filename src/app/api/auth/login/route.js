@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/mongodb";
 import User from "@/models/User";
-import { signToken, setAuthCookie } from "@/lib/auth";
+import { signToken, setAuthCookie, signPendingToken } from "@/lib/auth";
 
 export async function POST(req) {
   try {
@@ -20,6 +20,11 @@ export async function POST(req) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
       return NextResponse.json({ error: "Nomer yoki parol noto'g'ri" }, { status: 401 });
+    }
+
+    if (user.handScanEnabled && user.handLandmarks?.length > 0) {
+      const pendingToken = signPendingToken({ id: user._id.toString() });
+      return NextResponse.json({ requireHandScan: true, pendingToken });
     }
 
     const token = signToken({ id: user._id.toString() });

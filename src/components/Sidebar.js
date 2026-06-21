@@ -13,6 +13,7 @@ const links = [
   { href: "/dashboard/books", label: "Kitoblar", icon: "📚" },
   { href: "/dashboard/expenses", label: "Xarajat", icon: "💰" },
   { href: "/dashboard/lessons", label: "Dars qilish", icon: "🎓" },
+  { href: "/dashboard/settings", label: "Sozlamalar", icon: "⚙️" },
 ];
 
 export default function Sidebar({ name, username }) {

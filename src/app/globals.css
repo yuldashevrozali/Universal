@@ -456,6 +456,38 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 2p
 .chat-back { display: none; background: transparent; border: none; color: var(--accent);
   font-size: 16px; padding: 0 8px 0 0; }
 
+/* ===== Hand Scanner ===== */
+.scanner-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.72);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  animation: fade-in .2s ease;
+}
+.scanner-box {
+  width: 100%; max-width: 400px; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px; animation: sheet-up .3s cubic-bezier(.2,.9,.2,1) both;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.scanner-header { display: flex; align-items: center; gap: 10px; }
+.scanner-ic { font-size: 28px; }
+.scanner-video-wrap { position: relative; width: 320px; height: 240px; border-radius: 14px; overflow: hidden; background: #000; }
+.scanner-canvas {
+  width: 320px; height: 240px; display: block;
+  border-radius: 14px; border: 2px solid var(--line);
+  transition: border-color .3s;
+}
+.scanner-canvas.detected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(52,211,153,.25); }
+.scanner-ring {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.scanner-ring-pct {
+  position: absolute; font-size: 18px; font-weight: 800; color: var(--green);
+}
+.scanner-status { font-size: 14px; font-weight: 500; margin: 0; text-align: center; }
+
 @media (min-width: 821px) {
   .mobile-topbar, .backdrop { display: none !important; }
 }

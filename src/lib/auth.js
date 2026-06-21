@@ -8,6 +8,19 @@ export function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
 }
 
+export function signPendingToken(payload) {
+  return jwt.sign({ ...payload, pending: true }, JWT_SECRET, { expiresIn: "5m" });
+}
+
+export function verifyPendingToken(token) {
+  try {
+    const d = jwt.verify(token, JWT_SECRET);
+    return d?.pending ? d : null;
+  } catch {
+    return null;
+  }
+}
+
 export function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
