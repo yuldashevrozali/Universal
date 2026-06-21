@@ -22,6 +22,10 @@ export async function POST(req) {
       return NextResponse.json({ error: "Nomer yoki parol noto'g'ri" }, { status: 401 });
     }
 
+    if (user.blocked) {
+      return NextResponse.json({ error: "Hisobingiz bloklangan. Admin bilan bog'laning." }, { status: 403 });
+    }
+
     if (user.handScanEnabled && user.handLandmarks?.length > 0) {
       const pendingToken = signPendingToken({ id: user._id.toString() });
       return NextResponse.json({ requireHandScan: true, pendingToken });

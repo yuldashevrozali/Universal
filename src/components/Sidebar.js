@@ -16,7 +16,7 @@ const links = [
   { href: "/dashboard/settings", label: "Sozlamalar", icon: "⚙️" },
 ];
 
-export default function Sidebar({ name, username }) {
+export default function Sidebar({ name, username, isAdmin = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -61,6 +61,17 @@ export default function Sidebar({ name, username }) {
           })}
         </nav>
         <div style={{ position: "absolute", bottom: 16, left: 14, right: 14 }}>
+          {isAdmin && (
+            <Link
+              href="/dashboard/admin"
+              className={`nav-link ${pathname === "/dashboard/admin" ? "active" : ""}`}
+              onClick={() => setOpen(false)}
+              style={{ marginBottom: 8, borderColor: "rgba(251,191,36,.3)", color: "var(--yellow)" }}
+            >
+              <span className="nav-ic">👑</span>
+              <span className="nav-text">Admin panel</span>
+            </Link>
+          )}
           <div className="nav-text" style={{ fontSize: 13, color: "var(--muted)", padding: "0 8px 10px" }}>
             {name}{username ? ` · @${username}` : ""}
           </div>

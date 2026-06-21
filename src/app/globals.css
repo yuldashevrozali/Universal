@@ -584,6 +584,26 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 2p
 .act:active { transform: scale(.9); }
 
 /* ======================================================
+   ADMIN PANEL
+   ====================================================== */
+.admin-user-row {
+  display: flex; align-items: center; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  animation: admin-row-in .35s cubic-bezier(.2,.9,.2,1) both;
+  transition: background .15s;
+}
+.admin-user-row:last-child { border-bottom: none; }
+.admin-user-row:hover { background: rgba(108,140,255,.04); border-radius: 10px; padding-left: 6px; padding-right: 6px; margin: 0 -6px; }
+@keyframes admin-row-in { from { opacity: 0; transform: translateX(-10px); } }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.admin-spinner {
+  width: 32px; height: 32px; border-radius: 50%; margin: 0 auto;
+  border: 3px solid var(--line); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+
+/* ======================================================
    EXPENSES — particle burst
    ====================================================== */
 @keyframes expense-particle {

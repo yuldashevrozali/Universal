@@ -8,6 +8,8 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     handScanEnabled: { type: Boolean, default: false },
     handLandmarks: { type: [Number], default: [] },
+    blocked: { type: Boolean, default: false },
+    lastSeen: { type: Date, default: null },
   },
   { timestamps: true }
 );
