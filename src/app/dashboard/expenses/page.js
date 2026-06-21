@@ -75,7 +75,8 @@ export default function ExpensesPage() {
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
-  const [flash, setFlash] = useState(null); // balans o'zgarganda chaqnash
+  const [flash, setFlash] = useState(null);
+  const [particles, setParticles] = useState([]);
 
   const animatedBalance = useCountUp(stats?.balance ?? 0);
 
@@ -114,8 +115,21 @@ export default function ExpensesPage() {
       setErr(d.error || "Xatolik");
       return;
     }
-    setFlash(mode);
+    const savedMode = mode;
+    setFlash(savedMode);
     setTimeout(() => setFlash(null), 900);
+
+    // Floating emoji particles
+    const emoji = savedMode === "income" ? "💰" : "💸";
+    const newParticles = Array.from({ length: 8 }, (_, i) => ({
+      id: Date.now() + i,
+      emoji,
+      x: 30 + Math.random() * 40,
+      delay: i * 0.08,
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 2000);
+
     setMode(null);
     load();
   }
@@ -131,7 +145,26 @@ export default function ExpensesPage() {
   const maxCat = stats?.categories?.[0]?.amount || 1;
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      {/* Floating particles on add */}
+      {particles.map((p) => (
+        <span
+          key={p.id}
+          style={{
+            position: "fixed",
+            left: `${p.x}%`,
+            top: "50%",
+            fontSize: 26,
+            pointerEvents: "none",
+            zIndex: 999,
+            animation: `expense-particle 1.6s ease-out both`,
+            animationDelay: `${p.delay}s`,
+          }}
+        >
+          {p.emoji}
+        </span>
+      ))}
+
       <h1 className="page-title">Xarajat</h1>
       <p className="page-sub">Pul balansingiz, kirim-chiqimlar va kunlik-oylik tahlil.</p>
 

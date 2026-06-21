@@ -456,6 +456,191 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 2p
 .chat-back { display: none; background: transparent; border: none; color: var(--accent);
   font-size: 16px; padding: 0 8px 0 0; }
 
+/* ======================================================
+   GLOBAL ANIMATIONS
+   ====================================================== */
+
+/* --- Page entrance --- */
+.page-title { animation: slide-down .45s cubic-bezier(.2,.9,.2,1) both; }
+.page-sub   { animation: slide-down .45s cubic-bezier(.2,.9,.2,1) .06s both; }
+@keyframes slide-down { from { opacity:0; transform: translateY(-12px); } }
+
+/* --- Stagger helpers (data-stagger="N") --- */
+[data-stagger] { animation: float-up .5s cubic-bezier(.2,.9,.2,1) both; }
+[data-stagger="1"] { animation-delay: 40ms; }
+[data-stagger="2"] { animation-delay: 100ms; }
+[data-stagger="3"] { animation-delay: 160ms; }
+[data-stagger="4"] { animation-delay: 220ms; }
+[data-stagger="5"] { animation-delay: 280ms; }
+[data-stagger="6"] { animation-delay: 340ms; }
+[data-stagger="7"] { animation-delay: 400ms; }
+[data-stagger="8"] { animation-delay: 460ms; }
+
+/* ======================================================
+   DASHBOARD HOME
+   ====================================================== */
+.home-card {
+  animation: home-card-in .55s cubic-bezier(.2,.9,.2,1) both;
+  position: relative; overflow: hidden;
+  transition: transform .18s ease, box-shadow .2s, border-color .2s;
+}
+@keyframes home-card-in { from { opacity:0; transform: translateY(22px) scale(.97); } }
+.home-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 60% 0%, rgba(108,140,255,.12), transparent 70%);
+  opacity: 0; transition: opacity .3s;
+}
+.home-card:hover { transform: translateY(-5px); border-color: rgba(108,140,255,.5); box-shadow: 0 18px 40px rgba(0,0,0,.35), 0 0 24px rgba(108,140,255,.12); }
+.home-card:hover::after { opacity: 1; }
+.home-card:hover .home-ic { transform: scale(1.18) rotate(-5deg); }
+.home-ic { font-size: 32px; margin-bottom: 10px; display: inline-block; transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+
+/* Ambient orbs */
+.ambient-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.ambient-orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: .28;
+  animation: orb-float ease-in-out infinite;
+}
+.orb1 { width:500px; height:500px; background:radial-gradient(circle,#3b5bff,transparent); top:-100px; right:-80px; animation-duration: 12s; }
+.orb2 { width:350px; height:350px; background:radial-gradient(circle,#7c3aed,transparent); bottom:-60px; left:-60px; animation-duration: 9s; animation-delay: -4s; }
+.orb3 { width:260px; height:260px; background:radial-gradient(circle,#0891b2,transparent); top:50%; left:40%; animation-duration: 15s; animation-delay: -7s; }
+@keyframes orb-float {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(30px,-20px) scale(1.07); }
+  66%  { transform: translate(-20px, 15px) scale(.93); }
+}
+
+/* ======================================================
+   GRIND (TIMER)
+   ====================================================== */
+.timer-running-glow {
+  animation: timer-glow-pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(108,140,255,.6));
+}
+@keyframes timer-glow-pulse {
+  0%,100% { filter: drop-shadow(0 0 10px rgba(108,140,255,.45)); }
+  50%      { filter: drop-shadow(0 0 30px rgba(108,140,255,.9)); }
+}
+.grind-stat { animation: float-up .5s cubic-bezier(.2,.9,.2,1) both; }
+.grind-stat:nth-child(1) { animation-delay: .12s; }
+.grind-stat:nth-child(2) { animation-delay: .2s; }
+.grind-stat:nth-child(3) { animation-delay: .28s; }
+.grind-stat .stat { display: inline-block; animation: stat-bounce .6s cubic-bezier(.34,1.56,.64,1) both .3s; }
+@keyframes stat-bounce { from { opacity:0; transform: scale(.5) translateY(10px); } }
+.session-row { animation: slide-in-left .35s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes slide-in-left { from { opacity:0; transform: translateX(-14px); } }
+
+/* ======================================================
+   GOALS
+   ====================================================== */
+.goals-progress-wrap { margin-bottom: 16px; animation: float-up .4s ease .1s both; }
+.goals-progress-track { height: 8px; background: var(--bg2); border-radius: 999px; overflow: hidden; }
+.goals-progress-fill  { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .7s cubic-bezier(.2,.9,.2,1); }
+.goals-pct { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.all-done-banner { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.4); color: var(--green); padding: 11px 14px; border-radius: 10px; font-weight: 600; margin-bottom: 14px; animation: pop .5s ease; }
+.todo { animation: todo-in .35s cubic-bezier(.2,.9,.2,1) both; }
+.todo:nth-child(1)  { animation-delay: 40ms; }
+.todo:nth-child(2)  { animation-delay: 80ms; }
+.todo:nth-child(3)  { animation-delay: 120ms; }
+.todo:nth-child(4)  { animation-delay: 160ms; }
+.todo:nth-child(5)  { animation-delay: 200ms; }
+.todo:nth-child(6)  { animation-delay: 240ms; }
+.todo:nth-child(7)  { animation-delay: 280ms; }
+.todo:nth-child(8)  { animation-delay: 320ms; }
+@keyframes todo-in  { from { opacity:0; transform: translateX(-12px); } }
+.check.on { animation: check-pop .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes check-pop { 0%{ transform:scale(.6); } 100%{ transform:scale(1); } }
+
+/* ======================================================
+   CHAT — bubble slide-in
+   ====================================================== */
+.bubble.me   { animation: bubble-right .22s cubic-bezier(.2,.9,.2,1) both; }
+.bubble.them { animation: bubble-left  .22s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes bubble-right { from { opacity:0; transform: translateX(18px) scale(.93); } }
+@keyframes bubble-left  { from { opacity:0; transform: translateX(-18px) scale(.93); } }
+.chat-user { animation: float-up .3s ease both; }
+
+/* ======================================================
+   LESSONS — 3D card
+   ====================================================== */
+.lesson-tile { transition: transform .2s ease, box-shadow .2s, border-color .2s; }
+.lesson-tile:hover { transform: translateY(-8px) scale(1.03); border-color: rgba(108,140,255,.6); box-shadow: 0 20px 44px rgba(0,0,0,.35), 0 0 24px rgba(108,140,255,.18); }
+.lesson-ic { transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+.lesson-tile:hover .lesson-ic { transform: scale(1.25) rotate(8deg); }
+
+/* ======================================================
+   BOOKS — post cards
+   ====================================================== */
+.post-card { animation: post-in .4s cubic-bezier(.2,.9,.2,1) both; }
+.post-card:nth-child(1) { animation-delay: 40ms; }
+.post-card:nth-child(2) { animation-delay: 100ms; }
+.post-card:nth-child(3) { animation-delay: 160ms; }
+.post-card:nth-child(4) { animation-delay: 220ms; }
+.post-card:nth-child(5) { animation-delay: 280ms; }
+@keyframes post-in { from { opacity:0; transform: translateY(16px); } }
+.act { transition: transform .1s, color .15s, border-color .15s, background .15s; }
+.act:active { transform: scale(.9); }
+
+/* ======================================================
+   EXPENSES — particle burst
+   ====================================================== */
+@keyframes expense-particle {
+  0%   { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-220px) scale(.4) rotate(360deg); }
+}
+
+/* ======================================================
+   AI CHAT — holographic
+   ====================================================== */
+.ai-holo {
+  position: relative; overflow: hidden; text-align: center; padding: 60px 32px;
+  background: linear-gradient(135deg, #0a1428, #0d1b3e);
+  border-color: rgba(108,140,255,.3);
+}
+.ai-holo-orb {
+  position: absolute; border-radius: 50%; pointer-events: none; filter: blur(55px);
+}
+.ai-orb1 { width:300px; height:300px; background:radial-gradient(circle,rgba(108,140,255,.35),transparent); top:-80px; right:-60px; animation: orb-float 10s ease-in-out infinite; }
+.ai-orb2 { width:220px; height:220px; background:radial-gradient(circle,rgba(155,108,255,.3),transparent); bottom:-50px; left:-40px; animation: orb-float 13s ease-in-out -5s infinite; }
+.ai-orb3 { width:160px; height:160px; background:radial-gradient(circle,rgba(6,182,212,.25),transparent); bottom:30px; right:30px; animation: orb-float 8s ease-in-out -2s infinite; }
+.ai-robot {
+  font-size: 76px; display: inline-block; position: relative; z-index: 2; margin-bottom: 20px;
+  animation: robot-float 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 28px rgba(108,140,255,.75));
+}
+@keyframes robot-float { 0%,100%{ transform:translateY(0) rotate(-3deg); } 50%{ transform:translateY(-14px) rotate(3deg); } }
+.ai-title {
+  position: relative; z-index: 2; margin: 0 0 10px; font-size: 26px; font-weight: 800; letter-spacing: 1px;
+  background: linear-gradient(135deg, #a5b4fc, #7c3aed, #06b6d4);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: ai-title-glow 3s ease-in-out infinite;
+}
+@keyframes ai-title-glow {
+  0%,100% { filter: drop-shadow(0 0 8px rgba(108,140,255,.4)); }
+  50%      { filter: drop-shadow(0 0 22px rgba(108,140,255,.9)); }
+}
+.ai-soon-badge {
+  display: inline-block; position: relative; z-index: 2;
+  padding: 6px 20px; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  background: linear-gradient(135deg, rgba(108,140,255,.15), rgba(155,108,255,.15));
+  border: 1px solid rgba(108,140,255,.4); color: var(--accent);
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(108,140,255,0); } 50%{ box-shadow:0 0 0 6px rgba(108,140,255,.15); } }
+.ai-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ai-particle {
+  position: absolute; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent); opacity: 0;
+  animation: ai-particle-up linear infinite;
+}
+@keyframes ai-particle-up {
+  0%   { opacity: 0; transform: translateY(0) scale(0); }
+  20%  { opacity: .8; }
+  100% { opacity: 0; transform: translateY(-180px) scale(.3); }
+}
+
 /* ===== Hacker Intro ===== */
 .hk-overlay {
   position: fixed; inset: 0; z-index: 200;

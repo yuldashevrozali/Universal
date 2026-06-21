@@ -163,10 +163,11 @@ export default function GrindPage() {
         </div>
 
         <div
-          className={`timer-ring ${finished ? "celebrate" : ""}`}
+          className={`timer-ring ${finished ? "celebrate" : ""} ${running ? "timer-running-glow" : ""}`}
           style={{
             width: 240, height: 240, borderRadius: "50%", margin: "0 auto 24px",
-            background: `conic-gradient(var(--accent) ${deg}deg, var(--line) 0deg)`,
+            background: `conic-gradient(${running ? "var(--accent)" : finished ? "var(--green)" : "var(--accent)"} ${deg}deg, var(--line) 0deg)`,
+            transition: "background 0.3s",
           }}
         >
           <div style={{
@@ -198,31 +199,39 @@ export default function GrindPage() {
       </div>
 
       <div className="grid grid-3" style={{ marginBottom: 20 }}>
-        <div className="card">
-          <div className="stat">{stats ? fmt(stats.day) : "…"}</div>
-          <div className="stat-label">Bugun</div>
-        </div>
-        <div className="card">
-          <div className="stat">{stats ? fmt(stats.week) : "…"}</div>
-          <div className="stat-label">Shu hafta</div>
-        </div>
-        <div className="card">
-          <div className="stat">{stats ? fmt(stats.month) : "…"}</div>
-          <div className="stat-label">Shu oy</div>
-        </div>
+        {[
+          { label: "Bugun",     val: stats ? fmt(stats.day)   : null },
+          { label: "Shu hafta", val: stats ? fmt(stats.week)  : null },
+          { label: "Shu oy",    val: stats ? fmt(stats.month) : null },
+        ].map((s, i) => (
+          <div key={s.label} className="card grind-stat" style={{ textAlign: "center", animationDelay: `${i * 80}ms` }}>
+            {s.val ? (
+              <div className="stat" style={{ background: "linear-gradient(135deg,var(--accent),var(--accent2))", WebkitBackgroundClip:"text", backgroundClip:"text", color:"transparent" }}>
+                {s.val}
+              </div>
+            ) : (
+              <div className="stat" style={{ color: "var(--muted)", fontSize: 28 }}>…</div>
+            )}
+            <div className="stat-label">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>So'nggi sessiyalar</h3>
         {stats && stats.recent.length === 0 && <p className="muted">Hali sessiya yo'q.</p>}
         {stats && stats.recent.map((s, i) => (
-          <div key={i} className="todo" style={{ marginBottom: 8 }}>
+          <div key={i} className="todo session-row" style={{ marginBottom: 8, animationDelay: `${i * 55}ms` }}>
             <span style={{ fontSize: 20 }}>{s.completed ? "✅" : "⏹"}</span>
             <span className="todo-text">{fmt(s.minutes)} <span className="muted">/ {s.target} daq maqsad</span></span>
             <span className="muted" style={{ fontSize: 13 }}>{s.dateKey}</span>
           </div>
         ))}
-        {stats && <p className="muted" style={{ marginBottom: 0 }}>Jami: <b>{fmt(stats.all)}</b> · {stats.count} sessiya</p>}
+        {stats && (
+          <p className="muted" style={{ marginBottom: 0 }}>
+            Jami: <b style={{ color: "var(--text)" }}>{fmt(stats.all)}</b> · {stats.count} sessiya
+          </p>
+        )}
       </div>
     </div>
   );

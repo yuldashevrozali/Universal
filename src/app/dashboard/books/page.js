@@ -95,9 +95,9 @@ export default function BooksPage() {
 
       {/* ===== Lenta (hammaning ommaviy postlari) ===== */}
       {tab === "feed" && (
-        <div>
+        <div key="feed">
           {feed.length === 0 && (
-            <div className="card center" style={{ padding: 40 }}>
+            <div className="card center" style={{ padding: 40, animation: "float-up .4s ease both" }}>
               <div style={{ fontSize: 44, marginBottom: 10 }}>🌱</div>
               <p className="muted" style={{ margin: 0 }}>Hali ommaviy post yo'q. Birinchi bo'lib ulashing — pastdagi <b>+</b> tugmasi.</p>
             </div>
@@ -110,9 +110,9 @@ export default function BooksPage() {
 
       {/* ===== Mening yozuvlarim ===== */}
       {tab === "mine" && (
-        <div>
+        <div key="mine">
           {mine.length === 0 && (
-            <div className="card center" style={{ padding: 40 }}>
+            <div className="card center" style={{ padding: 40, animation: "float-up .4s ease both" }}>
               <p className="muted" style={{ margin: 0 }}>Hali yozuv yo'q. <b>+</b> orqali post yoki iqtibos qo'shing.</p>
             </div>
           )}
@@ -124,11 +124,16 @@ export default function BooksPage() {
 
       {/* ===== Kitoblarim ===== */}
       {tab === "books" && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>O'qigan kitoblarim <span className="badge">{books.length}</span></h3>
+        <div className="card" key="books" style={{ animation: "float-up .4s ease both" }}>
+          <h3 style={{ marginTop: 0 }}>
+            O'qigan kitoblarim{" "}
+            <span className="badge" style={{ background: "linear-gradient(135deg,var(--accent),var(--accent2))", color:"#fff", border:"none" }}>
+              {books.length}
+            </span>
+          </h3>
           {books.length === 0 && <p className="muted">Hali kitob qo'shilmagan. <b>+</b> orqali kitob tugatdim deb belgilang.</p>}
-          {books.map((b) => (
-            <div key={b.id} className="todo" style={{ alignItems: "flex-start" }}>
+          {books.map((b, i) => (
+            <div key={b.id} className="todo" style={{ alignItems: "flex-start", animationDelay: `${i * 50}ms` }}>
               <span style={{ fontSize: 20 }}>📖</span>
               <div className="todo-text">
                 <div style={{ fontWeight: 600 }}>{b.title}</div>

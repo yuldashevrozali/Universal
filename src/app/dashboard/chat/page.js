@@ -23,6 +23,7 @@ function ChatInner() {
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
   const msgEnd = useRef(null);
 
   // Boshqa sahifadan ?user=&name=&username= bilan kelganda suhbatni ochish
@@ -66,11 +67,13 @@ function ChatInner() {
     const clean = text.trim();
     if (!clean || !active) return;
     setText("");
+    setSending(true);
     const res = await fetch("/api/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to: active.id, text: clean }),
     });
+    setSending(false);
     if (res.ok) {
       const { message } = await res.json();
       setMessages((m) => [...m, message]);
@@ -117,8 +120,19 @@ function ChatInner() {
                 <div ref={msgEnd} />
               </div>
               <form className="chat-input" onSubmit={send}>
-                <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Xabar yozing…" style={{ flex: 1 }} />
-                <button className="btn auto">Yuborish</button>
+                <input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Xabar yozing…"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  className="btn auto"
+                  disabled={sending || !text.trim()}
+                  style={{ minWidth: 90, transition: "transform .1s, opacity .2s" }}
+                >
+                  {sending ? "⏳" : "Yuborish"}
+                </button>
               </form>
             </>
           )}

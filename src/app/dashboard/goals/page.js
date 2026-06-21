@@ -63,13 +63,16 @@ export default function GoalsPage() {
   }
 
   const done = data.items.filter((i) => i.done).length;
+  const total = data.items.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = total > 0 && done === total;
 
   return (
     <div>
       <h1 className="page-title">Maqsadlar</h1>
       <p className="page-sub">Kunlik, oylik va yillik rejalaringizni yozing va belgilab boring.</p>
 
-      <div className="row" style={{ marginBottom: 18 }}>
+      <div className="row" style={{ marginBottom: 18 }} data-stagger="1">
         {TABS.map((t) => (
           <button key={t.key} className={`pill ${tab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
             {t.label}
@@ -96,6 +99,27 @@ export default function GoalsPage() {
           )}
         </div>
 
+        {/* Progress bar */}
+        {total > 0 && (
+          <div className="goals-progress-wrap">
+            <div className="goals-pct">
+              <span>{done}/{total} bajarildi</span>
+              <span style={{ color: allDone ? "var(--green)" : "var(--muted)", fontWeight: allDone ? 700 : 400 }}>
+                {pct}%
+              </span>
+            </div>
+            <div className="goals-progress-track">
+              <div className="goals-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        )}
+
+        {allDone && (
+          <div className="all-done-banner">
+            🎉 Barcha rejalar bajarildi! Zo'r ketsang!
+          </div>
+        )}
+
         {err && <div className="error">{err}</div>}
 
         {!data.editable && (
@@ -109,8 +133,8 @@ export default function GoalsPage() {
         ) : (
           <>
             {data.items.length === 0 && <p className="muted">Hali reja yo'q.</p>}
-            {data.items.map((it) => (
-              <div key={it.id} className={`todo ${it.done ? "done" : ""}`}>
+            {data.items.map((it, idx) => (
+              <div key={it.id} className={`todo ${it.done ? "done" : ""}`} style={{ animationDelay: `${idx * 45}ms` }}>
                 <button
                   className={`check ${it.done ? "on" : ""}`}
                   disabled={!data.editable}
