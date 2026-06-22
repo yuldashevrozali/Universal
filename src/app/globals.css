@@ -584,6 +584,14 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 2p
 .act:active { transform: scale(.9); }
 
 /* ======================================================
+   SECURITY TERMINAL
+   ====================================================== */
+.sec-terminal { scrollbar-width: thin; scrollbar-color: #00ff4133 transparent; }
+.sec-terminal::-webkit-scrollbar { width: 6px; }
+.sec-terminal::-webkit-scrollbar-thumb { background: #00ff4133; border-radius: 3px; }
+@keyframes sec-line-in { from { opacity: 0; transform: translateX(-6px); } }
+
+/* ======================================================
    ADMIN PANEL
    ====================================================== */
 .admin-user-row {

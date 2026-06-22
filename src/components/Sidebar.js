@@ -14,6 +14,7 @@ const links = [
   { href: "/dashboard/expenses", label: "Xarajat", icon: "💰" },
   { href: "/dashboard/lessons", label: "Dars qilish", icon: "🎓" },
   { href: "/dashboard/settings", label: "Sozlamalar", icon: "⚙️" },
+  { href: "/dashboard/security", label: "Xavfsizlik", icon: "🛡️" },
 ];
 
 export default function Sidebar({ name, username, isAdmin = false }) {
