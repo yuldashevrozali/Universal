@@ -103,12 +103,12 @@ export default function ExpensesPage() {
   async function submit(e) {
     e.preventDefault();
     setErr("");
-    const amtRm = Number(amount.replace(/\s/g, ""));
-    const amt = Math.round((amtRm || 0) * EXCHANGE_RATE);
-    if (!Number.isFinite(amt) || amt <= 0) {
+    const amtRm = parseFloat((amount || "").toString().replace(/,/g, "."));
+    if (!Number.isFinite(amtRm) || amtRm <= 0) {
       setErr("Summani to'g'ri kiriting");
       return;
     }
+    const amt = Math.round(amtRm * EXCHANGE_RATE);
     setSaving(true);
     const res = await fetch("/api/expenses", {
       method: "POST",
@@ -294,8 +294,14 @@ export default function ExpensesPage() {
                   placeholder="0"
                   value={amount}
                   onChange={(e) => {
-                    const raw = e.target.value.replace(/[^\d]/g, "");
-                    setAmount(raw ? Number(raw).toLocaleString("ru-RU").replace(/ /g, " ") : "");
+                    let v = e.target.value || "";
+                    // keep digits, dot and comma
+                    v = v.replace(/[^0-9.,]/g, "");
+                    // normalize commas to dot and allow only one dot
+                    v = v.replace(/,/g, ".");
+                    const parts = v.split(".");
+                    if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+                    setAmount(v);
                   }}
                   style={{ fontSize: 22, fontWeight: 700, textAlign: "center" }}
                 />
