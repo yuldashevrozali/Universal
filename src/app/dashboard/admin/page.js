@@ -41,6 +41,11 @@ export default function AdminPage() {
   const [confirm, setConfirm] = useState(null); // { type: "block"|"unblock"|"delete", user }
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [phoneCreate, setPhoneCreate] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createdOtp, setCreatedOtp] = useState("");
 
   const load = useCallback(async (search = q) => {
     setLoading(true);
@@ -60,6 +65,29 @@ export default function AdminPage() {
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(""), 2800);
+  }
+
+  async function doCreate() {
+    setCreateError("");
+    setCreatedOtp("");
+    if (!phoneCreate) return setCreateError("Nomer kiriting");
+    setCreating(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneCreate })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Xatolik');
+      setCreatedOtp(data.otp);
+      setPhoneCreate("");
+      // reload list
+      load();
+    } catch (e) {
+      setCreateError(e.message);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function doBlock(user, blocked) {
@@ -107,6 +135,15 @@ export default function AdminPage() {
 
   return (
     <div style={{ maxWidth: 860 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+        <button
+          className="btn"
+          onClick={() => setShowCreate(true)}
+          style={{ background: "linear-gradient(135deg,var(--accent),var(--accent2))" }}
+        >
+          ➕ Hisob yaratish
+        </button>
+      </div>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -128,15 +165,46 @@ export default function AdminPage() {
           border: "1px solid rgba(251,191,36,.35)", letterSpacing: 1,
         }}>👑 ADMIN</span>
       </div>
+
+      {/* Create account modal */}
+      {showCreate && (
+        <div className="modal-backdrop" onClick={() => !creating && setShowCreate(false)}>
+          <div className="modal sheet-up" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+            <div style={{ padding: 12 }}>
+              <h3>Yangi hisobi yaratish</h3>
+              <p className="muted">Foydalanuvchi uchun telefon raqamini kiriting. Tizim 1 martalik parol yaratadi.</p>
+              {createError && <div className="error">{createError}</div>}
+              <div style={{ marginTop: 10 }}>
+                <div className="field">
+                  <label>Nomer</label>
+                  <input value={phoneCreate} onChange={e => setPhoneCreate(e.target.value)} placeholder="+998 90 123 45 67" />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                <button className="btn secondary" disabled={creating} onClick={() => setShowCreate(false)} style={{ flex: 1 }}>Bekor</button>
+                <button className="btn" disabled={creating} onClick={doCreate} style={{ flex: 1 }}>{creating ? "Yaratilmoqda..." : "Yaratish"}</button>
+              </div>
+
+              {createdOtp && (
+                <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "var(--bg2)", border: "1px solid var(--line)" }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>Parol (1 martalik)</div>
+                  <div style={{ fontSize: 18, letterSpacing: 2 }}>{createdOtp}</div>
+                  <div className="muted" style={{ marginTop: 8 }}>Bu parol foydalanuvchiga berilishi kerak. U birinchi kirishda yangi parol yaratadi.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <p className="page-sub">Foydalanuvchilar boshqaruvi</p>
 
       {/* Stats */}
       <div className="grid grid-2" style={{ marginBottom: 20, gridTemplateColumns: "repeat(4, 1fr)" }}>
         {[
-          { label: "Jami",    val: total,   color: "var(--accent)",  icon: "👥" },
-          { label: "Faol",    val: active,  color: "var(--green)",   icon: "✅" },
+          { label: "Jami", val: total, color: "var(--accent)", icon: "👥" },
+          { label: "Faol", val: active, color: "var(--green)", icon: "✅" },
           { label: "Bloklangan", val: blocked, color: "var(--red)", icon: "🚫" },
-          { label: "Onlayn",  val: online,  color: "#34d399",        icon: "🟢" },
+          { label: "Onlayn", val: online, color: "#34d399", icon: "🟢" },
         ].map((s, i) => (
           <div key={s.label} className="card" data-stagger={i + 1}
             style={{ textAlign: "center", padding: "16px 12px" }}>
@@ -276,16 +344,16 @@ export default function AdminPage() {
                 {confirm.type === "delete"
                   ? "O'chirishni tasdiqlang"
                   : confirm.type === "block"
-                  ? "Bloklashni tasdiqlang"
-                  : "Blokdan chiqarishni tasdiqlang"}
+                    ? "Bloklashni tasdiqlang"
+                    : "Blokdan chiqarishni tasdiqlang"}
               </h3>
               <p className="muted" style={{ margin: "0 0 20px" }}>
                 <b style={{ color: "var(--text)" }}>{confirm.user.name}</b>{" "}
                 {confirm.type === "delete"
                   ? "foydalanuvchisi butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi."
                   : confirm.type === "block"
-                  ? "foydalanuvchisi bloklanadi. Login qila olmaydi."
-                  : "foydalanuvchisi blokdan chiqariladi."}
+                    ? "foydalanuvchisi bloklanadi. Login qila olmaydi."
+                    : "foydalanuvchisi blokdan chiqariladi."}
               </p>
               <div style={{ display: "flex", gap: 10 }}>
                 <button

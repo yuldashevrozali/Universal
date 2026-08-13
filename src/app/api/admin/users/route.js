@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/mongodb";
 import User from "@/models/User";
 import { getUserId } from "@/lib/auth";
@@ -66,4 +67,33 @@ export async function DELETE(req) {
 
   await User.findByIdAndDelete(userId);
   return NextResponse.json({ ok: true });
+}
+
+// POST — admin orqali yangi account yaratish (OTP bilan)
+export async function POST(req) {
+  const adminId = await checkAdmin();
+  if (!adminId) return NextResponse.json({ error: "Ruxsat yo'q" }, { status: 403 });
+
+  const body = await req.json();
+  const phone = (body.phone || "").toString().trim();
+  const name = (body.name || "Yangi foydalanuvchi").toString().slice(0, 60).trim();
+  if (!phone) return NextResponse.json({ error: "Nomer kiriting" }, { status: 400 });
+
+  await dbConnect();
+  const exists = await User.findOne({ phone });
+  if (exists) return NextResponse.json({ error: "Bu nomer allaqachon mavjud" }, { status: 409 });
+
+  // Generate 6-digit OTP
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const hash = await bcrypt.hash(otp, 10);
+
+  const user = await User.create({
+    name,
+    phone,
+    username: "",
+    passwordHash: hash,
+    mustChangePassword: true,
+  });
+
+  return NextResponse.json({ user: { id: user._id, name: user.name, phone: user.phone }, otp });
 }

@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
     handLandmarks: { type: [Number], default: [] },
     blocked: { type: Boolean, default: false },
     lastSeen: { type: Date, default: null },
+    mustChangePassword: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

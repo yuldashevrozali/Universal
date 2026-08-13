@@ -61,6 +61,20 @@ export default function SettingsPage() {
     }
   }
 
+  async function resetAllData() {
+    if (!confirm("Barcha xarajatlar va summalarni tozalashni tasdiqlaysizmi? Bu amal qaytarib bo'lmaydi.")) return;
+    setMsg("");
+    const res = await fetch('/api/expenses/reset', { method: 'POST' });
+    if (res.ok) {
+      setMsg('Barcha ma\'lumotlar tozalandi');
+      setTimeout(() => setMsg(''), 3000);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setMsg(d.error || 'Xatolik');
+      setTimeout(() => setMsg(''), 3000);
+    }
+  }
+
   async function onScan(landmarks) {
     setShowScanner(false);
     setScanLoading(true);
@@ -234,6 +248,14 @@ export default function SettingsPage() {
           />
         </Suspense>
       )}
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h2 style={{ margin: "0 0 12px", fontSize: 17 }}>Ma'lumotlarni tozalash</h2>
+        <p className="muted" style={{ marginBottom: 12 }}>Hamma xarajatlar va hisob-kitoblarni tozalash ( qaytarib bo'lmaydi ).</p>
+        <div>
+          <button className="btn" onClick={resetAllData}>Hamma ma'lumotni reset qilish</button>
+        </div>
+      </div>
     </div>
   );
 }

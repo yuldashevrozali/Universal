@@ -2,13 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Summani "1 234 567 so'm" ko'rinishida formatlash
-function fmtSom(n) {
-  const v = Math.round(Number(n) || 0);
-  return v.toLocaleString("ru-RU").replace(/ /g, " ") + " so'm";
+// Display amounts in Malaysian Ringgit (RM). Stored values are in so'm (UZS).
+const EXCHANGE_RATE = 3500; // 1 MYR = 3500 UZS (adjustable)
+
+function fmtRM(n) {
+  const v = Number(n) || 0;
+  const rm = v / EXCHANGE_RATE;
+  return rm.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " RM";
 }
-function fmtNum(n) {
-  return (Math.round(Number(n) || 0)).toLocaleString("ru-RU").replace(/ /g, " ");
+function fmtNumRM(n) {
+  const v = Number(n) || 0;
+  const rm = v / EXCHANGE_RATE;
+  return rm.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtDate(d) {
   return new Date(d).toLocaleString("uz", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -98,7 +103,8 @@ export default function ExpensesPage() {
   async function submit(e) {
     e.preventDefault();
     setErr("");
-    const amt = Number(amount.replace(/\s/g, ""));
+    const amtRm = Number(amount.replace(/\s/g, ""));
+    const amt = Math.round((amtRm || 0) * EXCHANGE_RATE);
     if (!Number.isFinite(amt) || amt <= 0) {
       setErr("Summani to'g'ri kiriting");
       return;
@@ -173,21 +179,21 @@ export default function ExpensesPage() {
         <div className="balance-glow" />
         <div className="balance-label">Asosiy balans</div>
         <div className={`balance-num ${animatedBalance < 0 ? "neg" : ""}`}>
-          {fmtNum(animatedBalance)} <span className="balance-cur">so'm</span>
+          {fmtRM(animatedBalance)}
         </div>
 
         <div className="balance-mini">
           <div className="bm">
             <span className="bm-dot in" />
             <div>
-              <div className="bm-val">+{fmtNum(month.in)}</div>
+              <div className="bm-val">+{fmtRM(month.in)}</div>
               <div className="bm-lbl">Shu oy kirim</div>
             </div>
           </div>
           <div className="bm">
             <span className="bm-dot out" />
             <div>
-              <div className="bm-val">−{fmtNum(month.out)}</div>
+              <div className="bm-val">−{fmtRM(month.out)}</div>
               <div className="bm-lbl">Shu oy chiqim</div>
             </div>
           </div>
@@ -207,15 +213,15 @@ export default function ExpensesPage() {
       <div className="grid grid-2" style={{ marginBottom: 20 }}>
         <div className="card stat-tile in-tile">
           <div className="stat-tile-head">📅 Bugun</div>
-          <div className="stat-tile-row"><span className="muted">Kirim</span><b className="pos">+{fmtNum(day.in)}</b></div>
-          <div className="stat-tile-row"><span className="muted">Chiqim</span><b className="neg">−{fmtNum(day.out)}</b></div>
-          <div className="stat-tile-sum">Sof: <b>{fmtNum(day.in - day.out)} so'm</b></div>
+          <div className="stat-tile-row"><span className="muted">Kirim</span><b className="pos">+{fmtRM(day.in)}</b></div>
+          <div className="stat-tile-row"><span className="muted">Chiqim</span><b className="neg">−{fmtRM(day.out)}</b></div>
+          <div className="stat-tile-sum">Sof: <b>{fmtRM(day.in - day.out)}</b></div>
         </div>
         <div className="card stat-tile out-tile">
           <div className="stat-tile-head">🗓️ Shu oy</div>
-          <div className="stat-tile-row"><span className="muted">Kirim</span><b className="pos">+{fmtNum(month.in)}</b></div>
-          <div className="stat-tile-row"><span className="muted">Chiqim</span><b className="neg">−{fmtNum(month.out)}</b></div>
-          <div className="stat-tile-sum">Sof: <b>{fmtNum(month.in - month.out)} so'm</b></div>
+          <div className="stat-tile-row"><span className="muted">Kirim</span><b className="pos">+{fmtRM(month.in)}</b></div>
+          <div className="stat-tile-row"><span className="muted">Chiqim</span><b className="neg">−{fmtRM(month.out)}</b></div>
+          <div className="stat-tile-sum">Sof: <b>{fmtRM(month.in - month.out)}</b></div>
         </div>
       </div>
 
@@ -229,7 +235,7 @@ export default function ExpensesPage() {
               <div className="cat-body">
                 <div className="cat-top">
                   <span>{c.name}</span>
-                  <b>{fmtNum(c.amount)} so'm</b>
+                  <b>{fmtRM(c.amount)}</b>
                 </div>
                 <div className="cat-bar">
                   <div className="cat-bar-fill" style={{ width: `${(c.amount / maxCat) * 100}%` }} />
@@ -254,7 +260,7 @@ export default function ExpensesPage() {
               <div className="txn-top">
                 <span>{t.category || (t.type === "income" ? "Kirim" : "Chiqim")}</span>
                 <b className={t.type === "income" ? "pos" : "neg"}>
-                  {t.type === "income" ? "+" : "−"}{fmtNum(t.amount)}
+                  {t.type === "income" ? "+" : "−"}{fmtNumRM(t.amount)} RM
                 </b>
               </div>
               <div className="txn-sub">
@@ -281,7 +287,7 @@ export default function ExpensesPage() {
             <form onSubmit={submit}>
               {err && <div className="error">{err}</div>}
               <div className="field">
-                <label>Summa (so'm)</label>
+                <label>Summa (RM)</label>
                 <input
                   inputMode="numeric"
                   autoFocus

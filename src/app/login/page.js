@@ -41,6 +41,13 @@ export default function LoginPage() {
         return;
       }
 
+      if (data.mustChangePassword) {
+        // Redirect user to set new password
+        router.replace('/set-password');
+        setLoading(false);
+        return;
+      }
+
       setStep("hacker");
       setLoading(false);
     } catch (e) {

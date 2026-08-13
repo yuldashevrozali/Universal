@@ -36,6 +36,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       user: { id: user._id, name: user.name, phone: user.phone, username: user.username },
+      mustChangePassword: !!user.mustChangePassword,
     });
   } catch (e) {
     return NextResponse.json({ error: e.message || "Xatolik" }, { status: 500 });
